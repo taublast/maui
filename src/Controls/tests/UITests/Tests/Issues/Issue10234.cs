@@ -33,7 +33,8 @@ namespace Microsoft.Maui.AppiumTests.Issues
 				App.Click("goToBack");
 				App.WaitForElement("goToShow");
 			}
-			finally{
+			finally
+			{
 				Reset();
 			}
 		}
