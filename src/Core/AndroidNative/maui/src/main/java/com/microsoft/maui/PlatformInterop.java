@@ -328,6 +328,12 @@ public class PlatformInterop {
         loadInto(builder, imageView, true, callback);
     }
 
+    static GlideUrl UrlWithOptions(Uri androidUri){        
+         return new GlideUrl(androidUri, new LazyHeaders.Builder()
+                .addHeader("User-Agent", "Mozilla/5.0 AppleWebKit Chrome Mobile Safari")
+                .build());
+    }
+
     public static void loadImageFromUri(ImageView imageView, String uri, boolean cachingEnabled, ImageLoaderCallback callback) {
         Uri androidUri = Uri.parse(uri);
         if (androidUri == null) {
@@ -336,7 +342,7 @@ public class PlatformInterop {
         }
         RequestBuilder<Drawable> builder = Glide
             .with(imageView)
-            .load(androidUri);
+            .load(UrlWithOptions(androidUri));
         loadInto(builder, imageView, cachingEnabled, callback);
     }
 
