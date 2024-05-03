@@ -1,7 +1,14 @@
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Maui.Controls.Hosting;
+using Microsoft.Maui.Hosting;
+using NSubstitute;
+using Polly;
 using Xunit;
 using IOPath = System.IO.Path;
 
@@ -28,6 +35,36 @@ namespace Microsoft.Maui.Controls.Core.UnitTests
 			return typeof(UriImageSourceTests).Assembly.GetManifestResourceStream(uri.LocalPath.Substring(1));
 		}
 
+		IMauiContext SetupContext()
+		{
+			var mauiApp = MauiApp.CreateBuilder(useDefaults: false)
+				.ConfigureImageSourceHttpClient()
+				.Build();
+
+			var services = mauiApp.Services;
+			var context = Substitute.For<IMauiContext>();
+			context.Services.Returns(services);
+
+			return context;
+		}
+
+		void SetupApplicationWithHttpClient(MauiApp mauiApp = null)
+		{
+			if (mauiApp == null)
+			{
+				mauiApp = MauiApp.CreateBuilder(useDefaults: false)
+					.ConfigureImageSourceHttpClient()
+					.Build();
+			}
+
+			var fakeMauiContext = Substitute.For<IMauiContext>();
+			var fakeHandler = Substitute.For<IElementHandler>();
+			fakeMauiContext.Services.Returns(mauiApp.Services);
+			fakeHandler.MauiContext.Returns(fakeMauiContext);
+			var app = new Application(true);
+			app.Handler = fakeHandler;
+		}
+
 		[Fact(Skip = "LoadImageFromStream")]
 		public void LoadImageFromStream()
 		{
@@ -35,9 +72,93 @@ namespace Microsoft.Maui.Controls.Core.UnitTests
 			{
 				Uri = new Uri("http://foo.com/Images/crimson.jpg"),
 			};
-			Stream s0 = loader.GetStreamAsync().Result;
+			Stream stream = loader.GetStreamAsync().Result;
 
-			Assert.Equal(79109, s0.Length);
+			Assert.Equal(79109, stream.Length);
+		}
+
+		[Fact]
+		public void ShouldCreateHttpClient()
+		{
+			var mauiApp = MauiApp.CreateBuilder(useDefaults: false)
+				.ConfigureImageSourceHttpClient()
+				.Build();
+
+			var client = mauiApp.Services.CreateImageSourceHttpClient();
+
+			Assert.NotNull(client);
+		}
+
+		[Fact]
+		public void LoadImageFromInternetWIthNonReusableClient()
+		{
+			IStreamImageSource loader = new UriImageSource
+			{
+				Uri = new Uri("https://upload.wikimedia.org/wikipedia/commons/1/12/Wikipedia.png"),
+			};
+			Stream stream = loader.GetStreamAsync().Result;
+
+			Assert.Equal(11742, stream.Length);
+		}
+
+		[Fact]
+		public void LoadImageFromInternetWIthFactoryClient()
+		{
+			SetupApplicationWithHttpClient();
+
+			IStreamImageSource loader = new UriImageSource
+			{
+				Uri = new Uri("https://upload.wikimedia.org/wikipedia/commons/1/12/Wikipedia.png"),
+			};
+			Stream stream = loader.GetStreamAsync().Result;
+
+			Assert.Equal(11742, stream.Length);
+		}
+
+		[Fact]
+		public void LoadImageFromInternetWIthCustomizedClient()
+		{
+			SetupApplicationWithHttpClient(MauiApp.CreateBuilder(useDefaults: false)
+				.ConfigureImageSourceHttpClient(
+					client =>
+					{
+						client.DefaultRequestHeaders.Add("User-Agent", "Tests");
+					},
+					build =>
+					{
+						build.ConfigurePrimaryHttpMessageHandler(() =>
+						{
+							var handler = new HttpClientHandler();
+							if (handler.SupportsAutomaticDecompression)
+							{
+								handler.MaxAutomaticRedirections = 2;
+							}
+							return handler;
+						});
+					})
+				.Build());
+
+			IStreamImageSource loader = new UriImageSource
+			{
+				Uri = new Uri("https://www.mediawiki.org/w/index.php?title=Special:Redirect/file/Wikipedia.png"),
+			};
+			Stream stream = loader.GetStreamAsync().Result;
+
+			Assert.Equal(11742, stream.Length);
+		}
+
+		[Fact]
+		public void LoadImageFromInternetRequiresUserAgent()
+		{
+			SetupApplicationWithHttpClient();
+
+			IStreamImageSource loader = new UriImageSource
+			{
+				Uri = new Uri("https://www.mediawiki.org/w/index.php?title=Special:Redirect/file/Wikipedia.png"),
+			};
+			Stream stream = loader.GetStreamAsync().Result;
+
+			Assert.Equal(11742, stream.Length);
 		}
 
 		[Fact(Skip = "SecondCallLoadFromCache")]

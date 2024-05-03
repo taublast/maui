@@ -34,6 +34,7 @@ namespace Microsoft.Maui.Hosting
 				this.ConfigureMauiHandlers(configureDelegate: null);
 
 				this.ConfigureFonts();
+				this.ConfigureImageSourceHttpClient();
 				this.ConfigureImageSources();
 				this.ConfigureAnimations();
 				this.ConfigureCrossPlatformLifecycleEvents();

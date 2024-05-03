@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Hosting;
 
 namespace Microsoft.Maui.Controls
 {
@@ -114,15 +115,19 @@ namespace Microsoft.Maui.Controls
 		{
 			try
 			{
-				using var client = new HttpClient();
+				var reusable = Application.Current?.FindMauiContext()?.Services.CreateImageSourceHttpClient();
+				if (reusable != null)
+				{
+					return await StreamWrapper.GetStreamAsync(uri, cancellationToken, reusable).ConfigureAwait(false);
+				}
 
+				using var client = new HttpClient();
 				// Do not remove this await otherwise the client will dispose before
 				// the stream even starts
 				return await StreamWrapper.GetStreamAsync(uri, cancellationToken, client).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
-
 				Application.Current?.FindMauiContext()?.CreateLogger<UriImageSource>()?.LogWarning(ex, "Error getting stream for {Uri}", Uri);
 				return null;
 			}
