@@ -19,7 +19,7 @@ public class Bugzilla33578 : _IssuesUITest
 	{
 		WaitForEntryCell("Enter text here 1");
 		App.ScrollDown("table");
-		App.ScrollDown("table");	
+		App.ScrollDown("table");
 		WaitForEntryCell("0");
 		TapEntryCell("0");
 		VerifyScreenshot("TableViewEntryCellShowsNumberKeyboard");

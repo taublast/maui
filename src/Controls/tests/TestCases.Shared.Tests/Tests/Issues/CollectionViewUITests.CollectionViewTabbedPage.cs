@@ -34,7 +34,7 @@ namespace Microsoft.Maui.TestCases.Tests.Issues
 			App.Tap(Add1);
 			App.WaitForElement(Tab2);
 			App.Tap(Tab2);
-			App.WaitForElementTillPageNavigationSettled(Success);		
+			App.WaitForElementTillPageNavigationSettled(Success);
 		}
 
 		[Test]
@@ -46,6 +46,6 @@ namespace Microsoft.Maui.TestCases.Tests.Issues
 			App.WaitForElement(Tab3);
 			App.Tap(Tab3);
 			App.WaitForElementTillPageNavigationSettled(Success);
-		}		
+		}
 	}
 }
