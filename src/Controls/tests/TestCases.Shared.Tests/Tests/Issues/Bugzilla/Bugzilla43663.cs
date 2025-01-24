@@ -28,7 +28,7 @@ public class Bugzilla43663 : _IssuesUITest
 		App.Tap(AlertCancelButton);
 		App.WaitForElement("Modal");
 		App.Tap("Click to dismiss modal");
-		App.WaitForElementTillPageNavigationSettled(AlertCancelButton);		
+		App.WaitForElementTillPageNavigationSettled(AlertCancelButton);
 		App.Tap(AlertCancelButton);
 		App.WaitForElement("Click to push Modal");
 	}
