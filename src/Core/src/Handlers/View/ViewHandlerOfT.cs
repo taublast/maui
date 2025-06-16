@@ -33,13 +33,13 @@ namespace Microsoft.Maui.Handlers
 
 		public new TPlatformView PlatformView
 		{
-			get => (TPlatformView?)base.PlatformView ?? throw new InvalidOperationException($"PlatformView cannot be null here");
+			get => base.PlatformView as TPlatformView;
 			private protected set => base.PlatformView = value;
 		}
 
 		public new TVirtualView VirtualView
 		{
-			get => (TVirtualView?)base.VirtualView ?? throw new InvalidOperationException($"VirtualView cannot be null here");
+			get => base.VirtualView as TVirtualView;
 			private protected set => base.VirtualView = value;
 		}
 
